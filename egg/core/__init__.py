@@ -28,7 +28,7 @@ from .language_analysis import (
     PrintValidationEvents,
     TopographicSimilarity,
 )
-from .reinforce_wrappers import (
+from .reinforce_wrappers_noisy import (
     ReinforceDeterministicWrapper,
     ReinforceWrapper,
     RnnReceiverDeterministic,
