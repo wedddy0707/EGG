@@ -245,7 +245,7 @@ class RnnSenderReinforce(nn.Module):
         num_layers=1,
         cell="rnn",
         noise_loc=0.0,
-        noise_scale=1.0,
+        noise_scale=0.000001,
     ):
         """
         :param agent: the agent to be wrapped
@@ -316,7 +316,8 @@ class RnnSenderReinforce(nn.Module):
             for i, layer in enumerate(self.cells):
                 # addition
                 # add noise to the hidden layers
-                prev_hidden[i] += self.noise_distr.sample() 
+                if self.training:
+                    prev_hidden[i] = prev_hidden[i] + self.noise_distr.sample() 
 
                 if isinstance(layer, nn.LSTMCell):
                     h_t, c_t = layer(input, (prev_hidden[i], prev_c[i]))
