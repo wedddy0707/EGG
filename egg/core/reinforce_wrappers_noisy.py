@@ -245,7 +245,7 @@ class RnnSenderReinforce(nn.Module):
         num_layers=1,
         cell="rnn",
         noise_loc=0.0,
-        noise_scale=0.000001,
+        noise_scale=0.0001,
     ):
         """
         :param agent: the agent to be wrapped

@@ -66,6 +66,15 @@ def get_params(params):
                         help="Name for your checkpoint (default: model)")
     parser.add_argument('--early_stopping_thr', type=float, default=0.9999,
                         help="Early stopping threshold on accuracy (default: 0.9999)")
+    # addition
+    parser.add_argument('--sender_noise_loc', type=float, default=0.0,
+                        help="The mean of the noise added to the hidden layers of Sender")
+    parser.add_argument('--sender_noise_scale', type=float, default=0.0,
+                        help="The standard deviation of the noise added to the hidden layers of Sender")
+    parser.add_argument('--receiver_noise_loc', type=float, default=0.0,
+                        help="The mean of the noise added to the hidden layers of Receiver")
+    parser.add_argument('--receiver_noise_scale', type=float, default=0.0,
+                        help="The standard deviation of the noise added to the hidden layers of Receiver")
 
     args = core.init(parser, params)
 
@@ -150,7 +159,8 @@ def main(params):
 
         sender = core.RnnSenderReinforce(sender,
                                    opts.vocab_size, opts.sender_embedding, opts.sender_hidden,
-                                   cell=opts.sender_cell, max_len=opts.max_len, num_layers=opts.sender_num_layers)
+                                   cell=opts.sender_cell, max_len=opts.max_len, num_layers=opts.sender_num_layers,
+                                   noise_loc=opts.sender_noise_loc, noise_scale=opts.sender_noise_scale)
     if opts.receiver_cell == 'transformer':
         receiver = Receiver(n_features=opts.n_features, n_hidden=opts.receiver_embedding)
         receiver = core.TransformerReceiverDeterministic(receiver, opts.vocab_size, opts.max_len,
