@@ -317,7 +317,7 @@ class RnnSenderReinforce(nn.Module):
                 # addition
                 # add noise to the hidden layers
                 if self.training:
-                    prev_hidden[i] = prev_hidden[i] + self.noise_distr.sample() 
+                    prev_hidden[i] = prev_hidden[i] + self.noise_distr.sample().to(prev_hidden[i].device) 
 
                 if isinstance(layer, nn.LSTMCell):
                     h_t, c_t = layer(input, (prev_hidden[i], prev_c[i]))
