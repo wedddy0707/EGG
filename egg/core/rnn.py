@@ -38,21 +38,19 @@ class NoisyCell(nn.Module):
             num_layers=num_layers,
         )
 
-        self.noise_distr = Normal(
-            torch.tensor([noise_loc  ] * n_hidden),
-            torch.tensor([noise_scale] * n_hidden)
-        )
+        self.noise_loc = noise_loc
+        self.noise_scale = noise.scale
     
     def forward(self, input : torch.Tensor, h_0 : Optional[torch.Tensor] = None):
         output, h_n = self.cell(input, h_0)
 
-        e = self.noise_distr.sample()
-
         if isinstance(self.cell, nn.LSTM):
             h, c = h_n
+            e = self.noise_loc + self.noise_scale * torch.randn_like(h)
             h = h + e.to(h.device)
             return output, (h, c)
         else:
+            e = self.noise_loc + self.noise_scale * torch.randn_like(h_n)
             h_n = h_n + e.to(h_n.device)
             return output, h_n
 
