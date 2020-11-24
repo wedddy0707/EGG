@@ -102,6 +102,8 @@ class RnnEncoder(nn.Module):
         n_hidden: int,
         cell: str = "rnn",
         num_layers: int = 1,
+        noise_loc : float = 0.0,
+        noise_scale : float = 0.0,
     ) -> None:
         """
         Arguments:
@@ -115,17 +117,13 @@ class RnnEncoder(nn.Module):
         """
         super(RnnEncoder, self).__init__()
 
-        cell = cell.lower()
-        cell_types = {"rnn": nn.RNN, "gru": nn.GRU, "lstm": nn.LSTM}
-
-        if cell not in cell_types:
-            raise ValueError(f"Unknown RNN Cell: {cell}")
-
-        self.cell = cell_types[cell](
-            input_size=embed_dim,
-            batch_first=True,
-            hidden_size=n_hidden,
-            num_layers=num_layers,
+        self.cell = NoisyCell(
+            embed_dim  = embed_dim,
+            n_hidden   = n_hidden,
+            cell       = cell,
+            num_layers = num_layers,
+            noise_loc  = noise_loc,
+            noise_scale= noise_scale,
         )
 
         self.embedding = nn.Embedding(vocab_size, embed_dim)
@@ -151,7 +149,7 @@ class RnnEncoder(nn.Module):
         )
         _, rnn_hidden = self.cell(packed)
 
-        if isinstance(self.cell, nn.LSTM):
+        if isinstance(self.cell.cell, nn.LSTM):
             rnn_hidden, _ = rnn_hidden
 
         return rnn_hidden[-1]
