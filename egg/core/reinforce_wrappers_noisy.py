@@ -406,11 +406,27 @@ class RnnReceiverDeterministic(nn.Module):
     """
 
     def __init__(
-        self, agent, vocab_size, embed_dim, hidden_size, cell="rnn", num_layers=1
+        self,
+        agent,
+        vocab_size,
+        embed_dim,
+        hidden_size,
+        cell="rnn",
+        num_layers=1,
+        noise_loc = 0.0,
+        noise_scale = 0.0,
     ):
         super(RnnReceiverDeterministic, self).__init__()
         self.agent = agent
-        self.encoder = RnnEncoder(vocab_size, embed_dim, hidden_size, cell, num_layers)
+        self.encoder = RnnEncoder(
+            vocab_size,
+            embed_dim,
+            hidden_size,
+            cell,
+            num_layers,
+            noise_loc,
+            noise_scale,
+        )
 
     def forward(self, message, input=None, lengths=None):
         encoded = self.encoder(message, lengths)
