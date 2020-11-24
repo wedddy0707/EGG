@@ -15,6 +15,7 @@ from .util import find_lengths
 
 class NoisyCell(nn.Module):
     def __init__(
+        self,
         embed_dim: int,
         n_hidden: int,
         cell: str = "rnn",
@@ -42,10 +43,10 @@ class NoisyCell(nn.Module):
             torch.tensor([noise_scale] * n_hidden)
         )
     
-    def forward(x, h_0):
-        output, h_n = self.cell(x, h_0)
-        
-        e = noise_distr.sample()
+    def forward(self, input : torch.Tensor, h_0 : Optional[torch.Tensor] = None):
+        output, h_n = self.cell(input, h_0)
+
+        e = self.noise_distr.sample()
 
         if isinstance(self.cell, nn.LSTM):
             h, c = h_n
@@ -118,12 +119,12 @@ class RnnEncoder(nn.Module):
         super(RnnEncoder, self).__init__()
 
         self.cell = NoisyCell(
-            embed_dim  = embed_dim,
-            n_hidden   = n_hidden,
-            cell       = cell,
-            num_layers = num_layers,
-            noise_loc  = noise_loc,
-            noise_scale= noise_scale,
+            embed_dim,
+            n_hidden,
+            cell,
+            num_layers,
+            noise_loc,
+            noise_scale
         )
 
         self.embedding = nn.Embedding(vocab_size, embed_dim)
