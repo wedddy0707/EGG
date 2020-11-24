@@ -39,7 +39,7 @@ class NoisyCell(nn.Module):
         )
 
         self.noise_loc = noise_loc
-        self.noise_scale = noise.scale
+        self.noise_scale = noise_scale
     
     def forward(self, input : torch.Tensor, h_0 : Optional[torch.Tensor] = None):
         output, h_n = self.cell(input, h_0)
