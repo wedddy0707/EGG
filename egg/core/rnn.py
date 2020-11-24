@@ -8,7 +8,85 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
+from torch.distributions import Normal
+
 from .util import find_lengths
+
+
+class NoisyCell(nn.Module):
+    def __init__(
+        embed_dim: int,
+        n_hidden: int,
+        cell: str = "rnn",
+        num_layers: int = 1,
+        noise_loc : float = 0.0,
+        noise_scale : float = 0.0,
+    ) -> None:
+        super(NoisyCell, self).__init__()
+
+        cell = cell.lower()
+        cell_types = {"rnn": nn.RNN, "gru": nn.GRU, "lstm": nn.LSTM}
+
+        if cell not in cell_types:
+            raise ValueError(f"Unknown RNN Cell: {cell}")
+
+        self.cell = cell_types[cell](
+            input_size=embed_dim,
+            batch_first=True,
+            hidden_size=n_hidden,
+            num_layers=num_layers,
+        )
+
+        self.noise_distr = Normal(
+            torch.tensor([noise_loc  ] * n_hidden),
+            torch.tensor([noise_scale] * n_hidden)
+        )
+    
+    def forward(x, h_0):
+        output, h_n = self.cell(x, h_0)
+        
+        e = noise_distr.sample()
+
+        if isinstance(self.cell, nn.LSTM):
+            h, c = h_n
+            h = h + e.to(h.device)
+            return output, (h, c)
+        else:
+            h_n = h_n + e.to(h_n.device)
+            return output, h_n
+
+
+
+class NoisyLSTM(nn.Module):
+    def __init__(
+        self,
+        input_size: int,
+        batch_first: bool,
+        hidden_size: int,
+        num_layers: int = 1,
+        noise_loc : float = 0.0,
+        noise_scale : float = 0.0,
+    ) -> None:
+        super(NoisyLSTM, self).__init__()
+
+        self.cell = nn.LSTM(
+            input_size=input_size,
+            batch_first=batch_first,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+        )
+
+        self.noise_distr = Normal(
+            torch.tensor([noise_loc  ] * hidden_size),
+            torch.tensor([noise_scale] * hidden_size)
+        )
+    
+    def forward(x, h_0):
+        output, (h_n,c_n) = self.cell(x, h_0)
+
+        h_n = h_n + noise_distr.sample().to(h_n.device)
+
+        return output, (h_n, c_n)
 
 
 class RnnEncoder(nn.Module):
