@@ -170,7 +170,8 @@ def main(params):
         receiver = Receiver(n_features=opts.n_features, n_hidden=opts.receiver_hidden)
         receiver = core.RnnReceiverDeterministic(receiver, opts.vocab_size, opts.receiver_embedding,
                                              opts.receiver_hidden, cell=opts.receiver_cell,
-                                             num_layers=opts.receiver_num_layers)
+                                             num_layers=opts.receiver_num_layers,
+                                             noise_loc=opts.receiver_noise_loc, noise_scale=opts.receiver_noise_scale)
 
     empty_logger = LoggingStrategy.minimal()
     game = core.SenderReceiverRnnReinforce(sender, receiver, loss, sender_entropy_coeff=opts.sender_entropy_coeff,
