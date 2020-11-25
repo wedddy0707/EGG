@@ -39,6 +39,9 @@ from .reinforce_wrappers_noisy import (
     TransformerReceiverDeterministic,
     TransformerSenderReinforce,
 )
+from .channel import (
+    Channel,
+)
 from .rnn import RnnEncoder
 from .trainers import Trainer
 from .util import (
@@ -52,12 +55,14 @@ from .util import (
     move_to,
 )
 
+
 __all__ = [
     "Trainer",
     "get_opts",
     "init",
     "build_optimizer",
     "Callback",
+    "Channel",
     "EarlyStopperAccuracy",
     "ConsoleLogger",
     "TensorboardLogger",

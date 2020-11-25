@@ -13,8 +13,10 @@ import torch.utils.data
 import egg.core as core
 from egg.core import EarlyStopperAccuracy
 from egg.core.interaction import LoggingStrategy
+from egg.core.channel import Channel
 from egg.zoo.channel.archs import Receiver, Sender
 from egg.zoo.channel.features import OneHotLoader, UniformLoader
+
 
 
 def get_params(params):
@@ -75,6 +77,8 @@ def get_params(params):
                         help="The mean of the noise added to the hidden layers of Receiver")
     parser.add_argument('--receiver_noise_scale', type=float, default=0.0,
                         help="The standard deviation of the noise added to the hidden layers of Receiver")
+    parser.add_argument('--channel_repl_prob', type=float, default=0.0,
+                        help="The probability of peplacement of each signal")
 
     args = core.init(parser, params)
 
@@ -173,11 +177,14 @@ def main(params):
                                              num_layers=opts.receiver_num_layers,
                                              noise_loc=opts.receiver_noise_loc, noise_scale=opts.receiver_noise_scale)
 
+    channel = Channel(opts.vocab_size, opts.channel_repl_prob)
+
     empty_logger = LoggingStrategy.minimal()
     game = core.SenderReceiverRnnReinforce(sender, receiver, loss, sender_entropy_coeff=opts.sender_entropy_coeff,
                                            receiver_entropy_coeff=opts.receiver_entropy_coeff,
                                            train_logging_strategy=empty_logger,
-                                           length_cost=opts.length_cost)
+                                           length_cost=opts.length_cost,
+                                           channel=channel)
 
     optimizer = core.build_optimizer(game.parameters())
 
