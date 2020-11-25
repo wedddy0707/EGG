@@ -530,10 +530,10 @@ class SenderReceiverRnnReinforce(nn.Module):
 
     def forward(self, sender_input, labels, receiver_input=None):
         message, log_prob_s, entropy_s = self.sender(sender_input)
-        message = self.channel(message)
-        message_length = find_lengths(message)
+        message_with_noise = self.channel(message)
+        message_length = find_lengths(message_with_noise)
         receiver_output, log_prob_r, entropy_r = self.receiver(
-            message, receiver_input, message_length
+            message_with_noise, receiver_input, message_length
         )
 
         loss, aux_info = self.loss(
