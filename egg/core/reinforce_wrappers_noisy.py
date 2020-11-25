@@ -484,6 +484,7 @@ class SenderReceiverRnnReinforce(nn.Module):
         baseline_type: Baseline = MeanBaseline,
         train_logging_strategy: LoggingStrategy = None,
         test_logging_strategy: LoggingStrategy = None,
+        channel = (lambda x: x),
     ):
         """
         :param sender: sender agent
@@ -509,6 +510,7 @@ class SenderReceiverRnnReinforce(nn.Module):
         super(SenderReceiverRnnReinforce, self).__init__()
         self.sender = sender
         self.receiver = receiver
+        self.channel = channel
         self.sender_entropy_coeff = sender_entropy_coeff
         self.receiver_entropy_coeff = receiver_entropy_coeff
         self.loss = loss
@@ -528,6 +530,7 @@ class SenderReceiverRnnReinforce(nn.Module):
 
     def forward(self, sender_input, labels, receiver_input=None):
         message, log_prob_s, entropy_s = self.sender(sender_input)
+        message = self.channel(message)
         message_length = find_lengths(message)
         receiver_output, log_prob_r, entropy_r = self.receiver(
             message, receiver_input, message_length
