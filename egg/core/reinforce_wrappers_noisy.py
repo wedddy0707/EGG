@@ -264,10 +264,6 @@ class RnnSenderReinforce(nn.Module):
         # addition
         self.noise_loc = noise_loc
         self.noise_scale = noise_scale
-        self.noise_distr = Normal(
-            torch.tensor([noise_loc  ] * hidden_size),
-            torch.tensor([noise_scale] * hidden_size)
-        )
 
         self.hidden_to_output = nn.Linear(hidden_size, vocab_size)
         self.embedding = nn.Embedding(vocab_size, embed_dim)
