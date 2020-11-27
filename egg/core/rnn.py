@@ -46,8 +46,11 @@ class NoisyCell(nn.Module):
 
         if isinstance(self.cell, nn.LSTM):
             h, c = h_n
-            e = self.noise_loc + self.noise_scale * torch.randn_like(h)
-            h = h + e.to(h.device)
+            e = torch.randn_like(h).to(h.device)
+            h = (
+                h + self.noise_loc + e * self.noise_scale
+            )
+            del e
             return output, (h, c)
         else:
             e = self.noise_loc + self.noise_scale * torch.randn_like(h_n)
