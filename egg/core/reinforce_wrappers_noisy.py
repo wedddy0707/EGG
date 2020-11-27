@@ -315,8 +315,11 @@ class RnnSenderReinforce(nn.Module):
                 # addition
                 # add noise to the hidden layers
                 if self.training:
-                    e = self.noise_loc + self.noise_scale * torch.randn_like(prev_hidden[i])
-                    prev_hidden[i] = prev_hidden[i] + e.to(prev_hidden[i].device) 
+                    e = torch.randn_like(prev_hidden[i]).to(prev_hidden[i].device)
+                    prev_hidden[i] = (
+                        prev_hidden[i] + self.noise_loc + e * self.noise_scale
+                    )
+                    del e
 
                 if isinstance(layer, nn.LSTMCell):
                     h_t, c_t = layer(input, (prev_hidden[i], prev_c[i]))
