@@ -55,39 +55,6 @@ class NoisyCell(nn.Module):
             return output, h_n
 
 
-
-class NoisyLSTM(nn.Module):
-    def __init__(
-        self,
-        input_size: int,
-        batch_first: bool,
-        hidden_size: int,
-        num_layers: int = 1,
-        noise_loc : float = 0.0,
-        noise_scale : float = 0.0,
-    ) -> None:
-        super(NoisyLSTM, self).__init__()
-
-        self.cell = nn.LSTM(
-            input_size=input_size,
-            batch_first=batch_first,
-            hidden_size=hidden_size,
-            num_layers=num_layers,
-        )
-
-        self.noise_distr = Normal(
-            torch.tensor([noise_loc  ] * hidden_size),
-            torch.tensor([noise_scale] * hidden_size)
-        )
-    
-    def forward(x, h_0):
-        output, (h_n,c_n) = self.cell(x, h_0)
-
-        h_n = h_n + noise_distr.sample().to(h_n.device)
-
-        return output, (h_n, c_n)
-
-
 class RnnEncoder(nn.Module):
     """Feeds a sequence into an RNN (vanilla RNN, GRU, LSTM) cell and returns a vector representation
     of it, which is found as the last hidden state of the last RNN layer.
