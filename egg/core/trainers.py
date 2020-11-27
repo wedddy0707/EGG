@@ -21,6 +21,8 @@ from .distributed import get_preemptive_checkpoint_dir
 from .interaction import Interaction
 from .util import get_opts, move_to
 
+# addition
+from .mem_check import memReport
 
 class Trainer:
     """
@@ -209,6 +211,10 @@ class Trainer:
             callback.on_train_begin(self)
 
         for epoch in range(self.start_epoch, n_epochs):
+            # addition
+            # debug
+            memReport()
+
             for callback in self.callbacks:
                 callback.on_epoch_begin(epoch + 1)  # noqa: E226
 
