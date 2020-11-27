@@ -31,12 +31,12 @@ class LoggingStrategy:
     ):
 
         return Interaction(
-            sender_input=sender_input.detach() if self.store_sender_input else None,
-            receiver_input=receiver_input.detach() if self.store_receiver_input else None,
-            labels=labels.detach() if self.store_labels else None,
-            message=message.detach() if self.store_message else None,
-            receiver_output=receiver_output.detach() if self.store_receiver_output else None,
-            message_length=message_length.detach() if self.store_message_length else None,
+            sender_input=sender_input.detach() if self.store_sender_input and sender_input is not None else None,
+            receiver_input=receiver_input.detach() if self.store_receiver_input and receiver_input is not None else None,
+            labels=labels.detach() if self.store_labels and labels is not None else None,
+            message=message.detach() if self.store_message and message is not None else None,
+            receiver_output=receiver_output.detach() if self.store_receiver_output and receiver_output is not None else None,
+            message_length=message_length.detach() if self.store_message_length and message_length is not None else None,
             aux=aux,
         )
 
