@@ -16,7 +16,7 @@ from .rnn import RnnEncoder
 from .transformer import TransformerEncoder, TransformerDecoder
 from .util import find_lengths
 from .baselines import MeanBaseline
-
+from .noisy_channel import Channel
 
 class ReinforceWrapper(nn.Module):
     """
@@ -366,8 +366,16 @@ class SenderReceiverRnnReinforce(nn.Module):
     >>> aux_info['aux']
     5.0
     """
-    def __init__(self, sender, receiver, loss, sender_entropy_coeff, receiver_entropy_coeff,
-                 length_cost=0.0, baseline_type=MeanBaseline):
+    def __init__(self,
+        sender,
+        receiver,
+        loss,
+        sender_entropy_coeff,
+        receiver_entropy_coeff,
+        length_cost=0.0,
+        baseline_type=MeanBaseline,
+        channel=(lambda x: x),
+    ):
         """
         :param sender: sender agent
         :param receiver: receiver agent
@@ -394,10 +402,15 @@ class SenderReceiverRnnReinforce(nn.Module):
         self.loss = loss
         self.length_cost = length_cost
 
+        self.channel = channel
+
         self.baselines = defaultdict(baseline_type)
 
     def forward(self, sender_input, labels, receiver_input=None):
         message, log_prob_s, entropy_s = self.sender(sender_input)
+
+        message = self.channel(message)
+
         message_lengths = find_lengths(message)
         receiver_output, log_prob_r, entropy_r = self.receiver(message, receiver_input, message_lengths)
 
