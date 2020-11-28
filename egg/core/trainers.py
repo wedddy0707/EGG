@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader
 from .util import get_opts, move_to
 from .callbacks import Callback, ConsoleLogger, Checkpoint, CheckpointSaver, TensorboardLogger
 
+from .mem_check import memReport
 
 def _add_dicts(a, b):
     result = dict(a)
@@ -164,6 +165,7 @@ class Trainer:
             callback.on_train_begin(self)
 
         for epoch in range(self.start_epoch, n_epochs):
+            memReport()
             for callback in self.callbacks:
                 callback.on_epoch_begin()
 

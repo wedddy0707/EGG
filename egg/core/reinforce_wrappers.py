@@ -152,7 +152,7 @@ class RnnSenderReinforce(nn.Module):
     >>> message.size()  # batch size x max_len
     torch.Size([16, 10])
     """
-    def __init__(self, agent, vocab_size, embed_dim, hidden_size, max_len, num_layers=1, cell='rnn', force_eos=True):
+    def __init__(self, agent, vocab_size, embed_dim, hidden_size, max_len, num_layers=1, cell='rnn', force_eos=True,noise_loc=0.0,noise_scale=0.0):
         """
         :param agent: the agent to be wrapped
         :param vocab_size: the communication vocabulary size
@@ -180,6 +180,9 @@ class RnnSenderReinforce(nn.Module):
         self.vocab_size = vocab_size
         self.num_layers = num_layers
         self.cells = None
+
+        self.noise_loc = noise_loc
+        self.noise_scale = noise_scale
 
         cell = cell.lower()
         cell_types = {'rnn': nn.RNNCell, 'gru': nn.GRUCell, 'lstm': nn.LSTMCell}
@@ -211,6 +214,12 @@ class RnnSenderReinforce(nn.Module):
 
         for step in range(self.max_len):
             for i, layer in enumerate(self.cells):
+                if self.training:
+                    e = torch.randn_like(prev_hidden[i]).detach().to(prev_hidden[i].device)
+                    prev_hidden[i] = (
+                        prev_hidden[i] + self.noise_loc + e * self.noise_scale
+                    )
+
                 if isinstance(layer, nn.LSTMCell):
                     h_t, c_t = layer(input, (prev_hidden[i], prev_c[i]))
                     prev_c[i] = c_t
@@ -292,10 +301,27 @@ class RnnReceiverDeterministic(nn.Module):
     torch.Size([16, 3])
     """
 
-    def __init__(self, agent, vocab_size, embed_dim, hidden_size, cell='rnn', num_layers=1):
+    def __init__(self,
+        agent,
+        vocab_size,
+        embed_dim,
+        hidden_size,
+        cell='rnn',
+        num_layers=1,
+        noise_loc=0.0,
+        noise_scale=0.0,
+    ):
         super(RnnReceiverDeterministic, self).__init__()
         self.agent = agent
-        self.encoder = RnnEncoder(vocab_size, embed_dim, hidden_size, cell, num_layers)
+        self.encoder = RnnEncoder(
+            vocab_size,
+            embed_dim,
+            hidden_size,
+            cell,
+            num_layers,
+            noise_loc=noise_loc,
+            noise_scale=noise_scale,
+        )
 
     def forward(self, message, input=None, lengths=None):
         encoded = self.encoder(message)

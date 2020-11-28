@@ -10,13 +10,64 @@ import torch.nn as nn
 
 from .util import find_lengths
 
+class NoisyCell(nn.Module):
+    def __init__(
+        self,
+        embed_dim: int,
+        n_hidden: int,
+        cell: str = "rnn",
+        num_layers: int = 1,
+        noise_loc : float = 0.0,
+        noise_scale : float = 0.0,
+    ) -> None:
+        super(NoisyCell, self).__init__()
+
+        cell = cell.lower()
+        cell_types = {"rnn": nn.RNN, "gru": nn.GRU, "lstm": nn.LSTM}
+
+        if cell not in cell_types:
+            raise ValueError(f"Unknown RNN Cell: {cell}")
+
+        self.cell = cell_types[cell](
+            input_size=embed_dim,
+            batch_first=True,
+            hidden_size=n_hidden,
+            num_layers=num_layers,
+        )
+
+        self.noise_loc = noise_loc
+        self.noise_scale = noise_scale
+    
+    def forward(self, input : torch.Tensor, h_0 : Optional[torch.Tensor] = None):
+        output, h_n = self.cell(input, h_0)
+        if isinstance(self.cell, nn.LSTM):
+            h, c = h_n
+            e = torch.randn_like(h).detach().to(h.device)
+            h = (
+                h + self.noise_loc + e * self.noise_scale
+            )
+            return output, (h, c)
+        else:
+            e = torch.randn_like(h_n).detach().to(h_n.device)
+            h_n = (
+                h_n + self.noise_loc + e * self.noise_scale
+            )
+            return output, h_n
 
 class RnnEncoder(nn.Module):
     """Feeds a sequence into an RNN (vanilla RNN, GRU, LSTM) cell and returns a vector representation 
     of it, which is found as the last hidden state of the last RNN layer. Assumes that the eos token has the id equal to 0.
     """
 
-    def __init__(self, vocab_size: int, embed_dim: int, n_hidden: int, cell: str = 'rnn', num_layers: int = 1) -> None:
+    def __init__(self,
+        vocab_size: int,
+        embed_dim: int,
+        n_hidden: int,
+        cell: str = 'rnn',
+        num_layers: int = 1,
+        noise_loc: float = 0.0,
+        noise_scale: float = 0.0
+    ) -> None:
         """
         Arguments:
             vocab_size {int} -- The size of the input vocabulary (including eos)
@@ -35,8 +86,14 @@ class RnnEncoder(nn.Module):
         if cell not in cell_types:
             raise ValueError(f"Unknown RNN Cell: {cell}")
 
-        self.cell = cell_types[cell](input_size=embed_dim, batch_first=True,
-                               hidden_size=n_hidden, num_layers=num_layers)
+        self.cell = NoisyCell(
+            embed_dim,
+            n_hidden,
+            cell,
+            num_layers,
+            noise_loc,
+            noise_scale
+        )
 
         self.embedding = nn.Embedding(vocab_size, embed_dim)
 
@@ -55,7 +112,7 @@ class RnnEncoder(nn.Module):
             lengths = find_lengths(message)
 
         packed = nn.utils.rnn.pack_padded_sequence(
-            emb, lengths, batch_first=True, enforce_sorted=False)
+            emb, lengths.cpu(), batch_first=True, enforce_sorted=False)
         _, rnn_hidden = self.cell(packed)
 
         if isinstance(self.cell, nn.LSTM):
