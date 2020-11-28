@@ -80,19 +80,13 @@ class RnnEncoder(nn.Module):
         """
         super(RnnEncoder, self).__init__()
 
-        cell = cell.lower()
-        cell_types = {'rnn': nn.RNN, 'gru': nn.GRU, 'lstm': nn.LSTM}
-
-        if cell not in cell_types:
-            raise ValueError(f"Unknown RNN Cell: {cell}")
-
-        self.cell = NoisyCell(
+        self.noisycell = NoisyCell(
             embed_dim,
             n_hidden,
             cell,
             num_layers,
             noise_loc,
-            noise_scale
+            noise_scale,
         )
 
         self.embedding = nn.Embedding(vocab_size, embed_dim)
@@ -113,9 +107,9 @@ class RnnEncoder(nn.Module):
 
         packed = nn.utils.rnn.pack_padded_sequence(
             emb, lengths.cpu(), batch_first=True, enforce_sorted=False)
-        _, rnn_hidden = self.cell(packed)
+        _, rnn_hidden = self.noisycell(packed)
 
-        if isinstance(self.cell, nn.LSTM):
+        if isinstance(self.noisycell.cell, nn.LSTM):
             rnn_hidden, _ = rnn_hidden
 
         return rnn_hidden[-1]
