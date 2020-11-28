@@ -10,6 +10,7 @@ import torch.utils.data
 import torch.nn.functional as F
 import egg.core as core
 from egg.core import EarlyStopperAccuracy
+from egg.core import Channel
 from egg.zoo.channel.features import OneHotLoader, UniformLoader
 from egg.zoo.channel.archs import Sender, Receiver
 
@@ -167,9 +168,12 @@ def main(params):
                                              num_layers=opts.receiver_num_layers,
                                              noise_loc=opts.receiver_noise_loc, noise_scale=opts.receiver_noise_scale)
 
+    channel = Channel(vocab_size=opts.vocab_size, p=opts.channel_repl_prob)
+
     game = core.SenderReceiverRnnReinforce(sender, receiver, loss, sender_entropy_coeff=opts.sender_entropy_coeff,
                                            receiver_entropy_coeff=opts.receiver_entropy_coeff,
-                                           length_cost=opts.length_cost)
+                                           length_cost=opts.length_cost,
+                                           channel=channel)
 
     optimizer = core.build_optimizer(game.parameters())
 
