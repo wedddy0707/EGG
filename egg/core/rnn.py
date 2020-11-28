@@ -34,25 +34,17 @@ class NoisyCell(nn.Module):
             hidden_size=n_hidden,
             num_layers=num_layers,
         )
-
+        self.isLSTM = isinstance(self.cell, nn.LSTM)
         self.noise_loc = noise_loc
         self.noise_scale = noise_scale
     
     def forward(self, input : torch.Tensor, h_0 : Optional[torch.Tensor] = None):
-        output, h_n = self.cell(input, h_0)
-        if isinstance(self.cell, nn.LSTM):
-            h, c = h_n
-            e = torch.randn_like(h).detach().to(h.device)
-            h = (
-                h + self.noise_loc + e * self.noise_scale
-            )
-            return output, (h, c)
-        else:
-            e = torch.randn_like(h_n).detach().to(h_n.device)
-            h_n = (
-                h_n + self.noise_loc + e * self.noise_scale
-            )
-            return output, h_n
+        output, h = self.cell(input, h_0)
+        if self.training:
+            h, c = h if self.isLSTM else h, None
+            h    = h + self.noise_loc + self.noise_scale * torch.randn_like(h).to(h.device)
+            h    = (h, c) if self.isLSTM else h
+        return output, h
 
 class RnnEncoder(nn.Module):
     """Feeds a sequence into an RNN (vanilla RNN, GRU, LSTM) cell and returns a vector representation 
