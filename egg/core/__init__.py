@@ -19,6 +19,7 @@ from .reinforce_wrappers import (ReinforceWrapper, SymbolGameReinforce,
                                  TransformerSenderReinforce)
 from .util import find_lengths
 from .rnn import RnnEncoder
+from .noisy_channel import Channel
 
 __all__ = [
     'Trainer',
@@ -26,6 +27,7 @@ __all__ = [
     'init',
     'build_optimizer',
     'Callback',
+    'Channel',
     'EarlyStopperAccuracy',
     'ConsoleLogger',
     'TensorboardLogger',
