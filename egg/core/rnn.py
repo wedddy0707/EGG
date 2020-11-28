@@ -41,7 +41,7 @@ class NoisyCell(nn.Module):
     def forward(self, input : torch.Tensor, h_0 : Optional[torch.Tensor] = None):
         output, h = self.cell(input, h_0)
         if self.training:
-            h, c = h if self.isLSTM else h, None
+            h, c = h if self.isLSTM else (h, None)
             h    = h + self.noise_loc + self.noise_scale * torch.randn_like(h).to(h.device)
             h    = (h, c) if self.isLSTM else h
         return output, h
