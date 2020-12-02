@@ -215,10 +215,16 @@ class RnnSenderReinforce(nn.Module):
         for step in range(self.max_len):
             for i, layer in enumerate(self.cells):
                 if self.training:
-                    e = torch.randn_like(prev_hidden[i]).to(prev_hidden[i].device)
-                    prev_hidden[i] = (
-                        prev_hidden[i] + self.noise_loc + e * self.noise_scale
-                    )
+                    if isinstance(layer, nn.LSTMCell):
+                        e = torch.randn_like(prev_c[i]).to(prev_c[i].device)
+                        prev_c[i] = (
+                            prev_c[i] + self.noise_loc + e * self.noise_scale
+                        )
+                    else:
+                        e = torch.randn_like(prev_hidden[i]).to(prev_hidden[i].device)
+                        prev_hidden[i] = (
+                            prev_hidden[i] + self.noise_loc + e * self.noise_scale
+                        )
 
                 if isinstance(layer, nn.LSTMCell):
                     h_t, c_t = layer(input, (prev_hidden[i], prev_c[i]))

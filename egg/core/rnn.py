@@ -41,9 +41,16 @@ class NoisyCell(nn.Module):
     def forward(self, input : torch.Tensor, h_0 : Optional[torch.Tensor] = None):
         output, h = self.cell(input, h_0)
         if self.training:
-            h, c = h if self.isLSTM else (h, None)
-            h    = h + self.noise_loc + self.noise_scale * torch.randn_like(h).to(h.device)
-            h    = (h, c) if self.isLSTM else h
+            if self.isLSTM: 
+                '''
+                As for LSTM, which should we add noise to, h or c?
+                Here, we add it to c.
+                '''
+                h, c = h
+                c = c + self.noise_loc + self.noise_scale * torch.randn_like(c).to(c.device)
+                h = (h, c)
+            else:
+                h = h + self.noise_loc + self.noise_scale * torch.randn_like(h).to(h.device)
         return output, h
 
 class RnnEncoder(nn.Module):
