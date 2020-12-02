@@ -215,7 +215,7 @@ class RnnSenderReinforce(nn.Module):
         for step in range(self.max_len):
             for i, layer in enumerate(self.cells):
                 if self.training:
-                    e = torch.randn_like(prev_hidden[i]).detach().to(prev_hidden[i].device)
+                    e = torch.randn_like(prev_hidden[i]).to(prev_hidden[i].device)
                     prev_hidden[i] = (
                         prev_hidden[i] + self.noise_loc + e * self.noise_scale
                     )
