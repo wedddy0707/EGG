@@ -431,7 +431,7 @@ class SenderReceiverRnnReinforce(nn.Module):
 
         for i in range(message.size(1)):
             not_eosed = (i < message_lengths).float()
-            effective_entropy_s += entropy_s[:, i] * not_eosed
+            effective_entropy_s += (0.5 ** float(i)) * entropy_s[:, i] * not_eosed
             effective_log_prob_s += log_prob_s[:, i] * not_eosed
         effective_entropy_s = effective_entropy_s / message_lengths.float()
 
