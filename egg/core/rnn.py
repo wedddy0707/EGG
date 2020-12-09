@@ -31,12 +31,13 @@ class NoisyCell(nn.Module):
         if cell not in cell_type:
             raise ValueError(f"Unknown RNN Cell: {cell}")
 
-        self.cells = nn.ModuleList([
-            cell_type[cell](input_size=embed_dim, hidden_size=n_hidden) if i == 0 else \
-            cell_type[cell](input_size=n_hidden, hidden_size=n_hidden) for i in range(num_layers)])
         self.isLSTM = cell == "lstm"
         self.noise_loc = noise_loc
         self.noise_scale = noise_scale
+
+        self.cells = nn.ModuleList([
+            cell_type[cell](input_size=embed_dim, hidden_size=n_hidden) if i == 0 else \
+            cell_type[cell](input_size=n_hidden, hidden_size=n_hidden) for i in range(num_layers)])
     
     def forward(self, input : torch.Tensor, h_0 : Optional[torch.Tensor] = None):
         is_packed = isinstance(input, torch.nn.utils.rnn.PackedSequence)
@@ -45,8 +46,8 @@ class NoisyCell(nn.Module):
             max_batch_size = batch_sizes[0].item()
             num_batches = sorted_indices.size(0)
             if h_0 is None:
-                prev_h = [torch.zeros(num_batches, self.hidden_size)] * self.num_layers 
-                prev_c = [torch.zeros(num_batches, self.hidden_size)] * self.num_layers 
+                prev_h = [torch.zeros(num_batches, self.hidden_size).to(input.device)] * self.num_layers 
+                prev_c = [torch.zeros(num_batches, self.hidden_size).to(input.device)] * self.num_layers 
             else:
                 prev_h, prev_c = h_0 if self.isLSTM else (h_0, None)
 
