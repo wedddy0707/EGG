@@ -433,7 +433,7 @@ class SenderReceiverRnnReinforce(nn.Module):
             not_eosed = (i < message_lengths - 1).float()
             effective_entropy_s += entropy_s[:, i] * not_eosed
             effective_log_prob_s += log_prob_s[:, i] * not_eosed
-        effective_entropy_s = effective_entropy_s / torch.clamp(message_lengths, min=1).float()
+        effective_entropy_s = effective_entropy_s / torch.clamp(message_lengths - 1, min=1).float()
 
         weighted_entropy = effective_entropy_s.mean() * self.sender_entropy_coeff + \
                 entropy_r.mean() * self.receiver_entropy_coeff
