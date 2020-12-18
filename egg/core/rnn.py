@@ -56,25 +56,25 @@ class NoisyCell(nn.Module):
             output = []
             input_idx = 0
             for batch_size in batch_sizes.tolist():
-                x = input[input_idx:input_idx + batch_size]
-                for layer_no, layer in enumerate(self.cells):
+                input_per_step = input[input_idx:input_idx + batch_size]
+                for layer_idx, layer_obj in enumerate(self.cells):
                     if self.isLSTM:
-                        h, c = layer(x, (prev_h[layer_no][0:batch_size], prev_c[layer_no][0:batch_size]))
-                        e = torch.randn_like(c).to(c.device)
-                        c = c + self.noise_loc + e * self.noise_scale
-                        if batch_size < max_batch_size:
-                            prev_c[layer_no] = torch.cat([c] + [prev_c[layer_no][batch_size:max_batch_size]])
-                        else:
-                            prev_c[layer_no] = c
+                        h, c = layer_obj(input_per_step, (prev_h[layer_idx][0:batch_size], prev_c[layer_idx][0:batch_size]))
                     else:
-                        h = layer(x, prev_h[layer_no][0:batch_size])
-                        e = torch.randn_like(h).to(h.device)
-                        h = h + self.noise_loc + e * self.noise_scale
-                    if batch_size < max_batch_size:
-                        prev_h[layer_no] = torch.cat([h] + [prev_h[layer_no][batch_size:max_batch_size]])
+                        h = layer_obj(input_per_step, prev_h[layer_idx][0:batch_size])
+                    
+                    # add noise to c (if LSTM) or h (otherwise)
+                    noise = self.noise_loc + torch.randn_like(h) * self.noise_scale
+                    if self.isLSTM:
+                        c = c + noise.to(c.device)
                     else:
-                        prev_h[layer_no] = h
-                    x = h
+                        h = h + noise.to(h.device)
+                    
+                    prev_h[layer_idx] = torch.cat((h, prev_h[layer_idx][batch_size:max_batch_size]))
+                    if self.isLSTM:
+                        prev_c[layer_idx] = torch.cat((c, prev_c[layer_idx][batch_size:max_batch_size]))
+                    input_per_step = h
+
                 output.append(h)
                 input_idx = input_idx + batch_size
 
@@ -150,7 +150,6 @@ class RnnEncoder(nn.Module):
         packed = nn.utils.rnn.pack_padded_sequence(
             emb, lengths.cpu(), batch_first=True, enforce_sorted=False)
         output, rnn_hidden = self.noisycell(packed)
-        print('output.size()=', output[0].size())
 
         if self.noisycell.isLSTM:
             rnn_hidden, _ = rnn_hidden
