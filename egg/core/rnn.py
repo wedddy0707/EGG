@@ -40,6 +40,8 @@ class NoisyCell(nn.Module):
             cell_type[cell](input_size=n_hidden, hidden_size=n_hidden) for i in range(num_layers)])
     
     def forward(self, input : torch.Tensor, h_0 : Optional[torch.Tensor] = None):
+        '''
+        '''
         is_packed = isinstance(input, torch.nn.utils.rnn.PackedSequence)
         if is_packed:
             input, batch_sizes, sorted_indices, unsorted_indices = input
@@ -73,13 +75,13 @@ class NoisyCell(nn.Module):
                     else:
                         prev_h[layer_no] = h
                     x = h
-                # output.append(h[0])
+                output.append(h)
                 input_idx = input_idx + batch_size
 
-            # output = torch.stack(output)
-            # output = torch.nn.utils.rnn.PackedSequence(
-            #     output, batch_sizes, sorted_indices, unsorted_indices
-            # )
+            output = torch.cat(output)
+            output = torch.nn.utils.rnn.PackedSequence(
+                output, batch_sizes, sorted_indices, unsorted_indices
+            )
             h = prev_h
             h = torch.stack(h)
             h = torch.index_select(h, 1, unsorted_indices)
@@ -89,6 +91,8 @@ class NoisyCell(nn.Module):
                 c = torch.index_select(c, 1, unsorted_indices)
                 h = (h, c)
         else:
+            '''implement later
+            '''
             pass
         return output, h
 
@@ -145,7 +149,8 @@ class RnnEncoder(nn.Module):
 
         packed = nn.utils.rnn.pack_padded_sequence(
             emb, lengths.cpu(), batch_first=True, enforce_sorted=False)
-        _, rnn_hidden = self.noisycell(packed)
+        output, rnn_hidden = self.noisycell(packed)
+        print('output.size()=', output[0].size())
 
         if self.noisycell.isLSTM:
             rnn_hidden, _ = rnn_hidden
