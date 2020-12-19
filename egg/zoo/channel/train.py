@@ -87,6 +87,29 @@ def loss(sender_input, _message, _receiver_input, receiver_output, _labels):
     loss = F.cross_entropy(receiver_output, sender_input.argmax(dim=1), reduction="none")
     return loss, {'acc': acc}
 
+def suffix_test(game, n_features, device):
+    prediction_history = []
+    with torch.no_grad():
+        input = torch.eye(n_features).to(device)
+        message = game.sender(input) # Sender
+        message = message[0]
+        max_len = message.size(1)
+        for length in range(max_len):
+            prefix = message[:, 0:length + 1]
+            output = game.receiver(prefix) # Receiver
+            output = output[0]
+            output = output.argmax(dim=1) # max(dim=1).values
+            prediction_history.append(output)
+        prediction_history = torch.stack(prediction_history).permute(1, 0)
+
+        for i in range(input.size(0)):
+            input_symbol = input[i].argmax().item()
+            for length in range(max_len):
+                prefix = message[i, 0:length + 1]
+                prediction = prediction_history[i][length].item()
+                print(f'input: {input_symbol} -> prefix: {",".join([str(x.item()) for x in prefix])} -> prediction: {prediction}', flush=True)
+                if prefix[-1] == 0:
+                    break
 
 def dump(game, n_features, device, gs_mode):
     # tiny "dataset"
@@ -188,6 +211,9 @@ def main(params):
 
     trainer.train(n_epochs=opts.n_epochs)
 
+    print('-- suffix test --')
+    suffix_test(trainer.game, opts.n_features, device)
+    print('-- dump --')
     dump(trainer.game, opts.n_features, device, False)
     core.close()
 
