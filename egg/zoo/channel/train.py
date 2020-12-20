@@ -90,7 +90,10 @@ def loss(sender_input, _message, _receiver_input, receiver_output, _labels):
     return loss, {'acc': acc}
 
 
-def suffix_test(game, n_features, device):
+def suffix_test(game, n_features, device, add_eos=False):
+    '''
+    - add_eos: whether to add eos to each prefix
+    '''
     prediction_history = []
     with torch.no_grad():
         input = torch.eye(n_features).to(device)
@@ -99,6 +102,9 @@ def suffix_test(game, n_features, device):
         max_len = message.size(1)
         for length in range(max_len):
             prefix = message[:, 0:length + 1]
+            if add_eos:
+                eos = torch.zeros(prefix.size(0), 1, dtype=int)
+                prefix = torch.cat((prefix, eos), dim=1)
             output = game.receiver(prefix)  # Receiver
             output = output[0]
             output = output.argmax(dim=1)  # max(dim=1).values
@@ -109,9 +115,17 @@ def suffix_test(game, n_features, device):
             input_symbol = input[i].argmax().item()
             for length in range(max_len):
                 prefix = message[i, 0:length + 1]
+                eosed = (message[i, length] == 0)
+                if add_eos:
+                    eos = torch.zeros(1, dtype=int)
+                    prefix = torch.cat((prefix, eos), dim=0)
                 prediction = prediction_history[i][length].item()
-                print(f'input: {input_symbol} -> prefix: {",".join([str(x.item()) for x in prefix])} -> prediction: {prediction}', flush=True)
-                if prefix[-1] == 0:
+                if add_eos:
+                    prefix_type = 'prefix_with_eos'
+                else:
+                    prefix_type = 'prefix_witout_eos'
+                print(f'input: {input_symbol} -> {prefix_type}: {",".join([str(x.item()) for x in prefix])} -> prediction: {prediction}', flush=True)
+                if eosed:
                     break
 
 
@@ -216,8 +230,10 @@ def main(params):
 
     trainer.train(n_epochs=opts.n_epochs)
 
-    print('-- suffix test --')
-    suffix_test(trainer.game, opts.n_features, device)
+    print('-- suffix test without adding eos --')
+    suffix_test(trainer.game, opts.n_features, device, add_eos=False)
+    print('-- suffix test adding eos --')
+    suffix_test(trainer.game, opts.n_features, device, add_eos=True)
     print('-- dump --')
     dump(trainer.game, opts.n_features, device, False)
     core.close()
