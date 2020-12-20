@@ -439,10 +439,11 @@ class SenderReceiverRnnReinforce(nn.Module):
         decayed_denom = torch.zeros_like(message_lengths).float()
         for i in range(message.size(1)):
             not_eosed = (i < message_lengths).float()
-            decayed_ratio = decayed_ratio * self.sender_entropy_common_ratio
-            decayed_denom += decayed_ratio * not_eosed
             effective_entropy_s += entropy_s[:, i] * decayed_ratio * not_eosed
             effective_log_prob_s += log_prob_s[:, i] * not_eosed
+            decayed_denom += decayed_ratio * not_eosed
+            # update decayed_ratio geometrically
+            decayed_ratio = decayed_ratio * self.sender_entropy_common_ratio
         effective_entropy_s = effective_entropy_s / decayed_denom
 
         weighted_entropy = effective_entropy_s.mean() * self.sender_entropy_coeff + \
