@@ -76,6 +76,8 @@ def get_params(params):
                         help="The standard deviation of the noise added to the hidden layers of Receiver")
     parser.add_argument('--channel_repl_prob', type=float, default=0.0,
                         help="The probability of peplacement of each signal")
+    parser.add_argument('--sender_entropy_common_ratio', type=float, default=1.0,
+                        help="the common_ratio of the weights of sender entropy")
 
     args = core.init(parser, params)
 
@@ -173,7 +175,8 @@ def main(params):
     game = core.SenderReceiverRnnReinforce(sender, receiver, loss, sender_entropy_coeff=opts.sender_entropy_coeff,
                                            receiver_entropy_coeff=opts.receiver_entropy_coeff,
                                            length_cost=opts.length_cost,
-                                           channel=channel)
+                                           channel=channel,
+                                           sender_entropy_common_ratio=opts.sender_entropy_common_ratio)
 
     optimizer = core.build_optimizer(game.parameters())
 

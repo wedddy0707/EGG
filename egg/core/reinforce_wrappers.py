@@ -381,6 +381,7 @@ class SenderReceiverRnnReinforce(nn.Module):
         length_cost=0.0,
         baseline_type=MeanBaseline,
         channel=(lambda x: x),
+        sender_entropy_common_ratio=1.0,
     ):
         """
         :param sender: sender agent
@@ -404,6 +405,7 @@ class SenderReceiverRnnReinforce(nn.Module):
         self.sender = sender
         self.receiver = receiver
         self.sender_entropy_coeff = sender_entropy_coeff
+        self.sender_entropy_common_ratio = sender_entropy_common_ratio
         self.receiver_entropy_coeff = receiver_entropy_coeff
         self.loss = loss
         self.length_cost = length_cost
@@ -429,11 +431,19 @@ class SenderReceiverRnnReinforce(nn.Module):
         # care about the rest
         effective_log_prob_s = torch.zeros_like(log_prob_r)
 
+        # decayed_ratio:
+        #   the ratio of sender entropy's weight at each time step
+        # decayed_denom:
+        #   the denominator for the weighted mean of sender entropy
+        decayed_ratio = 1.0
+        decayed_denom = torch.zeros_like(message_lengths).float()
         for i in range(message.size(1)):
             not_eosed = (i < message_lengths).float()
-            effective_entropy_s += entropy_s[:, i] * not_eosed
+            decayed_ratio = decayed_ratio * self.sender_entropy_common_ratio
+            decayed_denom += decayed_ratio * not_eosed
+            effective_entropy_s += entropy_s[:, i] * decayed_ratio * not_eosed
             effective_log_prob_s += log_prob_s[:, i] * not_eosed
-        effective_entropy_s = effective_entropy_s / message_lengths.float()
+        effective_entropy_s = effective_entropy_s / decayed_denom
 
         weighted_entropy = effective_entropy_s.mean() * self.sender_entropy_coeff + \
                 entropy_r.mean() * self.receiver_entropy_coeff
