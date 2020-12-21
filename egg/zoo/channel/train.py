@@ -225,6 +225,7 @@ def main(params):
     if opts.checkpoint_dir:
         '''
         info in checkpoint_name:
+            - n_features as f
             - vocab_size as vocab
             - random_seed as rs
             - lr as lr
@@ -240,6 +241,7 @@ def main(params):
         '''
         checkpoint_name = (
             f'{opts.name}'
+            + f'_f{opts.n_features}'
             + f'_vocab{opts.vocab_size}'
             + f'_rs{opts.random_seed}'
             + f'_lr{opts.lr}'
