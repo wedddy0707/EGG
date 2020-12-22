@@ -103,7 +103,7 @@ def suffix_test(game, n_features, device, add_eos=False):
         for length in range(max_len):
             prefix = message[:, 0:length + 1]
             if add_eos:
-                eos = torch.zeros(prefix.size(0), 1, dtype=int)
+                eos = torch.zeros(prefix.size(0), 1, dtype=int).to(device)
                 prefix = torch.cat((prefix, eos), dim=1)
             output = game.receiver(prefix)  # Receiver
             output = output[0]
@@ -117,7 +117,7 @@ def suffix_test(game, n_features, device, add_eos=False):
                 prefix = message[i, 0:length + 1]
                 eosed = (message[i, length] == 0)
                 if add_eos:
-                    eos = torch.zeros(1, dtype=int)
+                    eos = torch.zeros(1, dtype=int).to(device)
                     prefix = torch.cat((prefix, eos), dim=0)
                 prediction = prediction_history[i][length].item()
                 if add_eos:
