@@ -58,20 +58,16 @@ class NoisyCell(nn.Module):
                 for layer_no, layer in enumerate(self.cells):
                     if self.isLSTM:
                         h, c = layer(x, (prev_h[layer_no][0:batch_size], prev_c[layer_no][0:batch_size]))
-                        e = torch.randn_like(c).to(c.device)
-                        c = c + self.noise_loc + e * self.noise_scale
-                        if batch_size < max_batch_size:
-                            prev_c[layer_no] = torch.cat([c] + [prev_c[layer_no][batch_size:max_batch_size]])
-                        else:
-                            prev_c[layer_no] = c
+                        if self.training:
+                            e = torch.randn_like(c).to(c.device)
+                            c = c + self.noise_loc + e * self.noise_scale
+                        prev_c[layer_no] = torch.cat((c, prev_c[layer_no][batch_size:max_batch_size]))
                     else:
                         h = layer(x, prev_h[layer_no][0:batch_size])
-                        e = torch.randn_like(h).to(h.device)
-                        h = h + self.noise_loc + e * self.noise_scale
-                    if batch_size < max_batch_size:
-                        prev_h[layer_no] = torch.cat([h] + [prev_h[layer_no][batch_size:max_batch_size]])
-                    else:
-                        prev_h[layer_no] = h
+                        if self.training:
+                            e = torch.randn_like(h).to(h.device)
+                            h = h + self.noise_loc + e * self.noise_scale
+                    prev_h[layer_no] = torch.cat((h, prev_h[layer_no][batch_size:max_batch_size]))
                     x = h
                 # output.append(h[0])
                 input_idx = input_idx + batch_size
