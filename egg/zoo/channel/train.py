@@ -255,7 +255,7 @@ def main(params):
             + f'_crp{opts.channel_repl_prob}'
             + f'_scr{opts.sender_entropy_common_ratio}'
         )
-        callbacks.append(core.CheckpointSaver(checkpoint_path=opts.checkpoint_dir, prefix=checkpoint_name))
+        callbacks.append(core.CheckpointSaver(checkpoint_path=opts.checkpoint_dir, checkpoint_freq=opts.checkpoint_freq, prefix=checkpoint_name))
 
     trainer = core.Trainer(game=game, optimizer=optimizer, train_data=train_loader, validation_data=test_loader, callbacks=callbacks)
 
