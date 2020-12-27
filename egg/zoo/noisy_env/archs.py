@@ -11,8 +11,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
 
-from core.util import find_lengths
-from core.baselines import MeanBaseline
+from egg.core.util import find_lengths
+from egg.core.baselines import MeanBaseline
 
 
 class Receiver(nn.Module):
@@ -213,12 +213,14 @@ class NoisyCell(nn.Module):
         ])
 
     def forward(self, input: torch.Tensor, h_0: Optional[torch.Tensor] = None):
-        device = input.device
         is_packed = isinstance(input, torch.nn.utils.rnn.PackedSequence)
         if is_packed:
             input, batch_sizes, sorted_indices, unsorted_indices = input
             max_batch_size = batch_sizes[0].item()
             num_batches = sorted_indices.size(0)
+
+            device = input.device
+
             if h_0 is None:
                 prev_h = [torch.zeros(num_batches, self.hidden_size).to(device) for _ in range(self.num_layers)]  # noqa: E501
                 prev_c = [torch.zeros(num_batches, self.hidden_size).to(device) for _ in range(self.num_layers)]  # noqa: E501
