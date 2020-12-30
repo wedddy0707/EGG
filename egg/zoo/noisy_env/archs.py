@@ -55,6 +55,7 @@ class RnnSenderReinforce(nn.Module):
     >>> message.size()  # batch size x max_len
     torch.Size([16, 10])
     """  # noqa: E501
+
     def __init__(
         self,
         agent,
@@ -111,7 +112,7 @@ class RnnSenderReinforce(nn.Module):
 
         cell_type = cell_types[cell]
         self.cells = nn.ModuleList([
-            cell_type(input_size=embed_dim, hidden_size=hidden_size) if i == 0 else \
+            cell_type(input_size=embed_dim, hidden_size=hidden_size) if i == 0 else
             cell_type(input_size=hidden_size, hidden_size=hidden_size) for i in range(self.num_layers)  # noqa: E501,E502
         ])
 
@@ -208,7 +209,7 @@ class NoisyCell(nn.Module):
         self.noise_scale = noise_scale
 
         self.cells = nn.ModuleList([
-            cell_type[cell](input_size=embed_dim, hidden_size=n_hidden) if i == 0 else \
+            cell_type[cell](input_size=embed_dim, hidden_size=n_hidden) if i == 0 else
             cell_type[cell](input_size=n_hidden, hidden_size=n_hidden) for i in range(num_layers)  # noqa: E501,E502
         ])
 
@@ -273,6 +274,7 @@ class RnnEncoder(nn.Module):
     which is found as the last hidden state of the last RNN layer.
     Assumes that the eos token has the id equal to 0.
     """
+
     def __init__(
         self,
         vocab_size: int,
@@ -421,6 +423,7 @@ class SenderReceiverRnnReinforce(nn.Module):
     >>> aux_info['aux']
     5.0
     """  # noqa: E501
+
     def __init__(
         self,
         sender,
@@ -496,8 +499,8 @@ class SenderReceiverRnnReinforce(nn.Module):
         effective_entropy_s = effective_entropy_s / decayed_denom
 
         weighted_entropy = (
-            effective_entropy_s.mean() * self.sender_entropy_coeff
-            + entropy_r.mean() * self.receiver_entropy_coeff
+            effective_entropy_s.mean() * self.sender_entropy_coeff +
+            entropy_r.mean() * self.receiver_entropy_coeff
         )
 
         log_prob = effective_log_prob_s + log_prob_r
