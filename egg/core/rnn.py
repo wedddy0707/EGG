@@ -46,8 +46,8 @@ class NoisyCell(nn.Module):
             max_batch_size = batch_sizes[0].item()
             num_batches = sorted_indices.size(0)
             if h_0 is None:
-                prev_h = [torch.zeros(num_batches, self.hidden_size).to(input.device)] * self.num_layers 
-                prev_c = [torch.zeros(num_batches, self.hidden_size).to(input.device)] * self.num_layers 
+                prev_h = [torch.zeros(num_batches, self.hidden_size).to(input.device) for _ in range(self.num_layers)]
+                prev_c = [torch.zeros(num_batches, self.hidden_size).to(input.device) for _ in range(self.num_layers)]
             else:
                 prev_h, prev_c = h_0 if self.isLSTM else (h_0, None)
 
