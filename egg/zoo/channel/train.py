@@ -389,21 +389,21 @@ def main(params):
             - sender_entropy_common_ratio as scr
         '''
         checkpoint_name = (
-            f'{opts.name}'
-            + ('uniform' if opts.probs == 'uniform' else '')
-            + f'_f{opts.n_features}'
-            + f'_vocab{opts.vocab_size}'
-            + f'_rs{opts.random_seed}'
-            + f'_lr{opts.lr}'
-            + f'_shid{opts.sender_hidden}'
-            + f'_rhid{opts.receiver_hidden}'
-            + f'_sentr{opts.sender_entropy_coeff}'
-            + f'_reg{opts.length_cost}'
-            + f'_max_len{opts.max_len}'
-            + f'_sscl{opts.sender_noise_scale}'
-            + f'_rscl{opts.receiver_noise_scale}'
-            + f'_crp{opts.channel_repl_prob}'
-            + f'_scr{opts.sender_entropy_common_ratio}'
+            f'{opts.name}' +
+            ('uniform' if opts.probs == 'uniform' else '') +
+            f'_f{opts.n_features}' +
+            f'_vocab{opts.vocab_size}' +
+            f'_rs{opts.random_seed}' +
+            f'_lr{opts.lr}' +
+            f'_shid{opts.sender_hidden}' +
+            f'_rhid{opts.receiver_hidden}' +
+            f'_sentr{opts.sender_entropy_coeff}' +
+            f'_reg{opts.length_cost}' +
+            f'_max_len{opts.max_len}' +
+            f'_sscl{opts.sender_noise_scale}' +
+            f'_rscl{opts.receiver_noise_scale}' +
+            f'_crp{opts.channel_repl_prob}' +
+            f'_scr{opts.sender_entropy_common_ratio}'
         )
         callbacks.append(
             core.CheckpointSaver(
