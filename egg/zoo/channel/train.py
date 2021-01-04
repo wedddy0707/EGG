@@ -213,23 +213,29 @@ def suffix_test(game, n_features, device, add_eos=False):
                     break
 
 
-def hidden_activity(game, n_features, device):
+def hidden_activity(game, n_features, device, mode='raw'):
     with torch.no_grad():
         input = torch.eye(n_features).to(device)
         message = game.sender(input)
         message = message[0]
         max_len = message.size(1)
-        for i in range(n_features):
-            for t in range(1, max_len):
-                h_0 = game.sender.hidden_sequence()[i, t - 1]
-                h_1 = game.sender.hidden_sequence()[i, t]
-                h = h_1 - h_0
-                distance = torch.sqrt(torch.dot(h, h)).item()
-                print(
-                    f'input {i} between {t-1} and {t}: distance {distance}',
-                    flush=True)
-                if message[i, t] == 0 or message[i, 0] == 0:
-                    break
+        if mode == 'raw':
+            for i in range(n_features):
+                for t in range(0, max_len + 1):
+                    h = game.sender.hidden_sequence()[i, t]
+                    print(f'input {i} at time step {t}: hidden {h.tolist()}')
+        elif mode == 'distance':
+            for i in range(n_features):
+                for t in range(0, max_len):
+                    h_0 = game.sender.hidden_sequence()[i, t]
+                    h_1 = game.sender.hidden_sequence()[i, t + 1]
+                    h = h_1 - h_0
+                    distance = torch.sqrt(torch.dot(h, h)).item()
+                    print(
+                        f'input {i} between {t} and {t + 1}: distance {distance}',
+                        flush=True)
+                    if message[i, t] == 0:
+                        break
 
 
 def dump(game, n_features, device, gs_mode):
@@ -414,8 +420,10 @@ def main(params):
 
     trainer.train(n_epochs=opts.n_epochs)
 
-    print('-- hidden activity --')
-    hidden_activity(trainer.game, opts.n_features, device)
+    print('-- hidden activity: raw --')
+    hidden_activity(trainer.game, opts.n_features, device, mode='raw')
+    print('-- hidden activity: distance --')
+    hidden_activity(trainer.game, opts.n_features, device, mode='distance')
     print('-- suffix test without adding eos --')
     suffix_test(trainer.game, opts.n_features, device, add_eos=False)
     print('-- suffix test adding eos --')
