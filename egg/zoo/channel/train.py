@@ -176,6 +176,9 @@ def suffix_test(game, n_features, device, add_eos=False):
     '''
     - add_eos: whether to add eos to each prefix
     '''
+    train_state = game.training  # persist so we restore it back
+    game.eval()
+
     prediction_history = []
     with torch.no_grad():
         input = torch.eye(n_features).to(device)
@@ -211,9 +214,13 @@ def suffix_test(game, n_features, device, add_eos=False):
                     flush=True)
                 if eosed:
                     break
+    game.train(mode=train_state)
 
 
 def hidden_activity(game, n_features, device, mode='raw'):
+    train_state = game.training  # persist so we restore it back
+    game.eval()
+
     with torch.no_grad():
         input = torch.eye(n_features).to(device)
         message = game.sender(input)
@@ -237,6 +244,7 @@ def hidden_activity(game, n_features, device, mode='raw'):
                         flush=True)
                     if message[i, min(t, max_len - 1)] == 0:
                         break
+    game.train(mode=train_state)
 
 
 def dump(game, n_features, device, gs_mode):
