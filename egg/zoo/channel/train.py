@@ -219,14 +219,15 @@ def hidden_activity(game, n_features, device, mode='raw'):
         message = game.sender(input)
         message = message[0]
         max_len = message.size(1)
+        n_step = game.sender.hidden_sequence().size(1)
         if mode == 'raw':
             for i in range(n_features):
-                for t in range(0, max_len + 1):
+                for t in range(0, n_step):
                     h = game.sender.hidden_sequence()[i, t]
                     print(f'input {i} at time step {t}: hidden {h.tolist()}')
         elif mode == 'distance':
             for i in range(n_features):
-                for t in range(0, max_len):
+                for t in range(0, n_step - 1):
                     h_0 = game.sender.hidden_sequence()[i, t]
                     h_1 = game.sender.hidden_sequence()[i, t + 1]
                     h = h_1 - h_0
@@ -234,7 +235,7 @@ def hidden_activity(game, n_features, device, mode='raw'):
                     print(
                         f'input {i} between {t} and {t + 1}: distance {distance}',
                         flush=True)
-                    if message[i, t] == 0:
+                    if message[i, min(t, max_len - 1)] == 0:
                         break
 
 
