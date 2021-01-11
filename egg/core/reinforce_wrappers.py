@@ -448,6 +448,7 @@ class SenderReceiverRnnReinforce(nn.Module):
                  sender_entropy_coeff,
                  receiver_entropy_coeff,
                  length_cost=0.0,
+                 machineguntalk_cost=0.0,
                  baseline_type=MeanBaseline,
                  channel=(lambda x: x),
                  sender_entropy_common_ratio=1.0,
@@ -478,6 +479,7 @@ class SenderReceiverRnnReinforce(nn.Module):
         self.receiver_entropy_coeff = receiver_entropy_coeff
         self.loss = loss
         self.length_cost = length_cost
+        self.machineguntalk_cost = machineguntalk_cost
 
         self.channel = channel
 
@@ -536,7 +538,21 @@ class SenderReceiverRnnReinforce(nn.Module):
                 loss.detach())) *
             log_prob).mean()
 
-        optimized_loss = policy_length_loss + policy_loss - weighted_entropy
+        # my new loss
+        machineguntalk_loss = (
+            (message_lengths == message.size(1)).float() *
+            self.machineguntalk_cost)
+        policy_machineguntalk_loss = (
+            (machineguntalk_loss -
+             self.baselines['machineguntalk'].predict(machineguntalk_loss)) *
+            effective_log_prob_s).mean()
+
+        optimized_loss = (
+            policy_machineguntalk_loss +
+            policy_length_loss +
+            policy_loss -
+            weighted_entropy
+        )
         # if the receiver is deterministic/differentiable, we apply the actual
         # loss
         optimized_loss += loss.mean()
@@ -544,6 +560,7 @@ class SenderReceiverRnnReinforce(nn.Module):
         if self.training:
             self.baselines['loss'].update(loss)
             self.baselines['length'].update(length_loss)
+            self.baselines['machineguntalk'].update(machineguntalk_loss)
 
         for k, v in rest.items():
             rest[k] = v.mean().item() if hasattr(v, 'mean') else v

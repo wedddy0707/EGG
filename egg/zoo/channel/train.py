@@ -153,6 +153,12 @@ def get_params(params):
         type=float,
         default=1.0,
         help="the common_ratio of the weights of sender entropy")
+    parser.add_argument(
+        '--machineguntalk_cost',
+        type=float,
+        default=0.0,
+        help='the coefficient of machine-gun-talk penalty'
+    )
 
     args = core.init(parser, params)
 
@@ -372,6 +378,7 @@ def main(params):
         sender_entropy_coeff=opts.sender_entropy_coeff,
         receiver_entropy_coeff=opts.receiver_entropy_coeff,
         length_cost=opts.length_cost,
+        machineguntalk_cost=opts.machineguntalk_cost,
         channel=channel,
         sender_entropy_common_ratio=opts.sender_entropy_common_ratio)
 
