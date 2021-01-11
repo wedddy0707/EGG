@@ -6,7 +6,6 @@
 from collections import defaultdict
 import math
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,7 +15,6 @@ from .rnn import RnnEncoder
 from .transformer import TransformerEncoder, TransformerDecoder
 from .util import find_lengths
 from .baselines import MeanBaseline
-from .noisy_channel import Channel
 
 
 class ReinforceWrapper(nn.Module):
